@@ -246,11 +246,7 @@ class LinkedInApplication(object):
                 "contentEntities": [
                     {
                         "entityLocation": "",
-                        "thumbnails": [
-                            {
-                                "resolvedUrl": ""
-                            }
-                        ]
+                        "thumbnails": []
                     }
                 ],
                 "title": ""
@@ -263,10 +259,10 @@ class LinkedInApplication(object):
         if submitted_url is not None:
             post['content']['submitted-url'] = submitted_url
         if submitted_image_url is not None:
-            post['content']['contentEntities']['thumbnails']['resolvedUrl'] = submitted_image_url
-        response = application.make_request(
+            post['content']['contentEntities']['thumbnails'][0]['resolvedUrl'] = submitted_image_url
+        response = self.make_request(
             'POST', ENDPOINTS.SHARE, data=json.dumps(post))
-        raise_for_error(response)
+        # raise_for_error(response)
         return response.json()
 
     def search_company(self, params):
@@ -299,7 +295,7 @@ class LinkedInApplication(object):
                 }
             }
         }
-        response = application.make_request(
+        response = self.make_request(
             'POST', '%s/invitations' % ENDPOINTS.BASE, data=json.dumps(post))
         raise_for_error(response)
         return response.json()
@@ -398,17 +394,29 @@ class LinkedInApplication(object):
 
     def get_group(self):
         print(ENDPOINTS.BASE)
-        url = "%s/groupMemberships?q=member&member=urn:li:person:%s&membershipStatuses=List(MEMBER,OWNER)" % (ENDPOINTS.BASE, self.get_profile()['id'])
+        url = "%s/groupMemberships?q=member&member=urn:li:person:%s&membershipStatuses=List(MEMBER,OWNER)" % (
+            ENDPOINTS.BASE, self.get_profile()['id'])
         response = self.make_request('GET', url)
         # raise_for_error(response)
         return response.json()
 
-    def get_memberships(self):
-        pass
-
     def submit_company_share(self, **kwargs):
-        params = kwargs.pop('params', True)
-        response = application.make_request(
-            'POST', ENDPOINTS.SHARE, data=json.dumps(params))
-        raise_for_error(response)
+        submitted_url, submitted_image_url, visibility_code = None, None, None
+        if kwargs["submitted_url"]:
+            submitted_url = kwargs["submitted_url"]
+        if kwargs["submitted_image_url"]:
+            submitted_image_url = kwargs["submitted_image_url"]
+        if kwargs["visibility_code"]:
+            visibility_code = kwargs["visibility_code"]
+        response = self.post_share(post_type='organization', company_id=kwargs["company_id"], comment=None,
+                                   title=kwargs["title"], description=kwargs["description"],
+                                   submitted_url=submitted_url, submitted_image_url=submitted_image_url,
+                                   visibility_code=visibility_code)
+        return response
+
+    def get_testing(self):
+        url = 'https://api.linkedin.com/v2/shares?q=owners&owners=urn:li:person:%s&sharesPerOwner=100' % self.get_profile()[
+            "id"]
+        response = self.make_request('GET', url)
+        # raise_for_error(response)
         return response.json()
