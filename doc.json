@@ -1,0 +1,74 @@
+[
+    {
+        "_comment": "search company request data",
+        "_content_type": "application/json",
+        "search_type": "company",
+        "params": {
+            "baseSearchParams.keywords": "linkedin",
+            "companySearchParams.facetIndustry": "",
+            "companySearchParams.facetCompanyCountryRegion": "",
+            "companySearchParams.facetNetwork": "",
+            "companySearchParams.facetCompanySize": "",
+            "companySearchParams.facetNumFollowersRange": "",
+            "companySearchParams.facetFortune": ""
+        }
+    },
+    {
+        "_comment": "search person request data",
+        "_content_type": "application/json",
+        "search_type": "person",
+        "param": {
+            "handleString": "email1@abc.com",
+            "handleString": "email.exmaple.com"
+        }
+    },
+    {
+        "_comment": "search job",
+        "search_type": "job"
+    },
+    {
+        "a": "a",
+        "param": {
+            "owner": "urn:li:person:324_kGGaLE",
+            "text": {
+                "text": "Test Share!"
+            },
+            "subject": "Test Share Subject",
+            "distribution": {
+                "linkedInDistributionTarget": {}
+            },
+            "content": {
+                "contentEntities": [
+                    {
+                        "entityLocation": "https://www.example.com/content.html",
+                        "thumbnails": [
+                            {
+                                "resolvedUrl": "https://www.example.com/image.jpg"
+                            }
+                        ]
+                    }
+                ],
+                "title": "Test Share with Content"
+            }
+        },
+        "x": "x"
+    },
+    {
+        "linkedin/user/profile/": "complate,Working",
+        "linkedin/user/share/": "complate,working",
+        "linkedin/user/connection/": "complate,permission not allowed",
+        "linkedin/search/": "complate,working",
+        "linkedin/group/": "complate,permission not allowed",
+        "linkedin/company/info/": "",
+        "linkedin/company/updates/": "Not available",
+        "linkedin/company/follow/": "Not available",
+        "linkedin/company/unfollow/": "Not available",
+        "linkedin/company/search/": "complate,working",
+        "linkedin/company/share/": "complate,working",
+        "linkedin/comments/": "complate,permission not allowed",
+        "linkedin/job/": "complate,permission not allowed",
+        "linkedin/network/": "complete,permission not allowed",
+        "linkedin/share/": "complate,working",
+        "linkedin/invitation/": "Not available"
+    }
+]

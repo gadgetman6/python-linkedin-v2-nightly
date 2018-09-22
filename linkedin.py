@@ -14,6 +14,8 @@ from requests_oauthlib import OAuth1
 
 from .models import AccessToken
 from .utils import enum, to_utf8, raise_for_error, StringIO
+import json
+import urllib
 
 
 __all__ = ['LinkedInAuthentication', 'LinkedInApplication', 'PERMISSIONS']
@@ -185,7 +187,7 @@ class LinkedInApplication(object):
         url = '%s?q=viewer&start=0&count=%s' % (ENDPOINTS.CONNECTIONS, count)
         response = self.make_request(
             'GET', url, params=params, headers=headers)
-        raise_for_error(response)
+        # raise_for_error(response)
         return response.json()
 
     def get_profile(self, member_id=None, member_url=None, selectors=None,
@@ -212,6 +214,14 @@ class LinkedInApplication(object):
             ENDPOINTS.SHARE, self.get_profile()['id'])
         response = self.make_request(
             'GET', url, params=params, headers=headers)
+        raise_for_error(response)
+        return response.json()
+
+    def search_profile(self, params):
+        url = '%s/clientAwareMemberHandles?q=handleString&%s&projection=(elements*(member~))' % (
+            ENDPOINTS.BASE, urllib.parse.urlencode(params))
+        print(url)
+        response = self.make_request('GET', url)
         raise_for_error(response)
         return response.json()
 
@@ -259,27 +269,11 @@ class LinkedInApplication(object):
         raise_for_error(response)
         return response.json()
 
-    def search_company(self, keywords, facetIndustry=None, facetCompanyCountryRegion=None, facetNetwork=None,
-                       facetCompanySize=None, facetNumFollowersRange=None, facetFortune=None, params=None, headers=None):
-        new_param = '&baseSearchParams.keywords=' + \
-            keywords.replace(' ', '%20')
-        if facetIndustry:
-            new_param += '&companySearchParams.facetIndustry=' + facetIndustry
-        if facetCompanyCountryRegion:
-            new_param += '&companySearchParams.facetCompanyCountryRegion=' + \
-                facetCompanyCountryRegion
-        if facetNetwork:
-            new_param += '&companySearchParams.facetNetwork=' + facetNetwork
-        if facetCompanySize:
-            new_param += '&companySearchParams.facetCompanySize=' + facetCompanySize
-        if facetNumFollowersRange:
-            new_param += '&companySearchParams.facetNumFollowersRange=' + facetNumFollowersRange
-        if facetFortune:
-            new_param += '&companySearchParams.facetFortune=' + facetFortune
-        url = '%s%s' % (ENDPOINTS.COMPANY_SEARCH, new_param)
-        response = self.make_request(
-            'GET', url, params=params, headers=headers)
-        raise_for_error(response)
+    def search_company(self, params):
+        url = '%s/search?q=companiesV2&%s' % (
+            ENDPOINTS.BASE, urllib.parse.urlencode(params))
+        response = self.make_request('GET', url)
+        # raise_for_error(response)
         return response.json()
 
     def get_organization(self, organization_id, params=None, headers=None):
@@ -310,22 +304,25 @@ class LinkedInApplication(object):
         raise_for_error(response)
         return response.json()
 
-    def search_job(self, params=None, headers=None):
+    def search_job(self):
         url = '%s/recommendedJobs?q=byMember' % ENDPOINTS.BASE
-        response = self.make_request(
-            'GET', url, params=params, headers=headers)
-        raise_for_error(response)
+        response = self.make_request('GET', url)
+        # raise_for_error(response)
         return response.json()
 
-    def get_post_comments(self, share_id, params=None, headers=None):
+    def get_job(self, **kwargs):
+        return self.search_job()
+
+    def get_post_comments(self, selectors, params=None, **kwargs):
         url = '%s/socialActions/urn:li:share:%s/comments' % (
-            ENDPOINTS.BASE, share_id)
+            ENDPOINTS.BASE, kwargs['post_id'])
+        print(url)
         response = self.make_request(
-            'GET', url, params=params, headers=headers)
-        raise_for_error(response)
+            'GET', url, params=params)
+        # raise_for_error(response)
         return response.json()
 
-    def get_group(self, group_id, params=None, headers=None):
+    def get_groupss(self, group_id, params=None, headers=None):
         url = '%s/groupDefinitions/%s' % (ENDPOINTS.BASE, group_id)
         response = self.make_request(
             'GET', url, params=params, headers=headers)
@@ -347,13 +344,13 @@ class LinkedInApplication(object):
                 "urn:li:person:%s" % self.get_profile['id'],
             ]
         }
-        response = application.make_request(
+        response = self.make_request(
             'POST', '%s/groupMemberships?action=membershipAction' % ENDPOINTS.BASE, data=json.dumps(post))
         raise_for_error(response)
         return response.json()
 
     def submit_group_post(self, group_id, title, description,
-                   shareCommentary):
+                          shareCommentary):
         post = {
             "author": "urn:li:person:%s" % self.get_profile()['id'],
             "containerEntity": "urn:li:group:%s" % group_id,
@@ -386,9 +383,32 @@ class LinkedInApplication(object):
         }
         if shareCommentary is not None:
             post['specificContent']['shareCommentary'] = shareCommentary
-        response = application.make_request(
+        response = self.make_request(
             'POST', ENDPOINTS.SHARE, data=json.dumps(post))
         raise_for_error(response)
         return response.json()
 
+    def get_company_updates(self, organization_id, post):
+        url = '%s/people/id=%s/organizations/%s' % (
+            ENDPOINTS.SHARE, self.get_profile['id'], organization_id)
+        response = self.make_request(
+            'POST', url, data=json.dumps(post))
+        raise_for_error(response)
+        return response.json()
 
+    def get_group(self):
+        print(ENDPOINTS.BASE)
+        url = "%s/groupMemberships?q=member&member=urn:li:person:%s&membershipStatuses=List(MEMBER,OWNER)" % (ENDPOINTS.BASE, self.get_profile()['id'])
+        response = self.make_request('GET', url)
+        # raise_for_error(response)
+        return response.json()
+
+    def get_memberships(self):
+        pass
+
+    def submit_company_share(self, **kwargs):
+        params = kwargs.pop('params', True)
+        response = application.make_request(
+            'POST', ENDPOINTS.SHARE, data=json.dumps(params))
+        raise_for_error(response)
+        return response.json()
