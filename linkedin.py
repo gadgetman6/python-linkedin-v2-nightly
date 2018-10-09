@@ -483,3 +483,53 @@ class LinkedInApplication(object):
         url = "%s/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=urn:li:organization:%s%s" % (
             ENDPOINTS.BASE, organization_id, shaer_str)
         return self.make_get_request(url)
+
+    def rich_share(self, **kwargs):
+        fileupload = kwargs['fileupload']
+        headers = {
+            # "Content-type": "multipart/form-data",
+            # "Content-Disposition": "form-data"
+            # 'x-li-format': 'json',
+            # 'Content-Type': 'application/json'
+        }
+        # response = self.make_request('POST', 'https://api.linkedin.com/media/upload', data=json.dumps(post), headers=headers)
+
+        params = {}
+        with open(fileupload, 'rb') as f:
+            print(f)
+            kw = dict(data={}, params=params, files={fileupload: f},
+                      headers=headers, timeout=60)
+
+            if isinstance(self.authentication, LinkedInDeveloperAuthentication):
+                # Let requests_oauthlib.OAuth1 do *all* of the work here
+                auth = OAuth1(self.authentication.consumer_key, self.authentication.consumer_secret,
+                            self.authentication.user_token, self.authentication.user_secret)
+                kw.update({'auth': auth})
+            else:
+                params.update(
+                    {'oauth2_access_token': self.authentication.token.access_token})
+                response = requests.post(
+                    'https://api.linkedin.com/media/upload', **kw)
+            # raise_for_error(response)
+            return response.json()
+        return {}
+
+    def get_rich_media_summary(self, share_id):
+        # https://api.linkedin.com/v2/richMediaSummariesV2/JPEG-IMG-69ef4c1d2ee346a184a665e9595e2f92
+        url = "%s/richMediaSummariesV2/%s" % (
+            ENDPOINTS.BASE, share_id)
+        return self.make_get_request(url)
+
+    def get_batch_rich_media_summary(self, post_ids):
+        # https://api.linkedin.com/v2/richMediaSummariesV2?ids=JPEG-IMG-d1bf4938b968460585c38b615ed5d039
+        # &ids=PNG-IMG-1b0e1c93aa0a441bbcabd3ce7986ced9&ids=PNG-IMG-1b0e1c93aa0a441bbcabd3ce7986ce11
+        params_str = ''
+        for item in post_ids:
+            params_str += '&ids=' + item
+
+        url = "%s/richMediaSummariesV2?%s" % (
+            ENDPOINTS.BASE, params_str)
+        return self.make_get_request(url)
+
+
+
